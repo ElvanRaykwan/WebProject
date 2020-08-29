@@ -1,0 +1,104 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <div class = "flex-container">
+        <div class ="pic"><img src="{{list.url}}" alt="No Images" width="150px" ></div>
+        <div class = "content">
+            <h1>{{list.title}}</h1>
+            <p>Starting Price: ${{list.price}} </p>
+            <p>Description: {{list.description}}</p>
+            <p>{{list.date}}</p>
+            <p>Category: {{list.category}}</p>
+            <p>Created by: {{list.user.username}}</p>
+            <form method="post" action="{% url 'item' list.id %}">
+                {% csrf_token %}
+                <input name="item_id" type="hidden" value="{{list.id}}">
+                <input name="state" type="hidden" value="{{state}}">
+                <button type="submit" name='watch'>
+                    {{state}}
+                </button>
+            </form>
+            
+            <hr>
+
+            <p>
+                Current Highest Bidder: 
+                {% if lead == "None" %}
+                    None
+                {% else %}
+                    ${{price}} by {{lead}}
+                {% endif %} 
+            </p>
+            <form method="post" action="{% url 'item' list.id %}">
+                {% csrf_token %}
+                <label for="new_bid">There are {{number}} bid(s) so far</label>
+                </br>
+                <input name="new_bid" type="text" placeholder = "Enter the price">
+                <input name="item_id" type="hidden" value="{{list.id}}">
+                <input name="highest" type="hidden" value="{{price}}">
+                <input name="submit_bid" type="submit" value="Place Bid">
+            </form>
+            </br>
+            {% if messages %}
+                {% for message in messages %}
+                    <p style= color:red>{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+
+            {% if winner %}
+                <p style= color:red>The Auction for this item is over, the winner of the bid is: {{lead}} with a bid of ${{price}}</p>
+            {% else %}
+                {% if request.user == list.user %}
+                <form method="post" action="{% url 'item' list.id %}">
+                    {% csrf_token %}
+                    <input name="item_id" type="hidden" value="{{list.id}}">
+                    <input name="winner" type="hidden" value="{{lead}}">
+                    <button type="submit" name='end'>
+                        End Bidding
+                    </button>
+                </form>
+                {% endif %}
+            {% endif %}
+            
+            {% if list.active == False %}
+                {% if request.user == lead %}
+                <p style= font-weight:bold>Congratulations! You have won the item with a bid of ${{price}}</p>
+                {% endif %}
+            {% endif %}
+
+            <hr>
+
+            <p>Bidders: </p>
+            <ul>
+            {% for bidder in bidders %}
+                    <li>{{bidder}}</li>
+            {% endfor %}
+            </ul>
+
+            <hr>
+
+            </br>
+            <h1 id="com">Comments</h1>
+            <form method="post" action="{% url 'item' list.id %}">
+            {% csrf_token %}
+            <input name="comment" type="text" placeholder = "Enter your comment">
+            <input name="item_id" type="hidden" value="{{list.id}}">
+            <input name="submit_comment" type="submit" value="Comment">
+            </form>
+            </br>
+
+            <div class="comment_section">
+                {% for comment in comments %}
+                    <div class="comment">
+                        <div class="date">{{ comment.date_comment }}</div>
+                        <strong>{{ comment.user.username }}</strong>
+                        <p>{{ comment.content|linebreaks }}</p>
+                    </div>
+                {% empty %}
+                    <p>No comments here yet</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+{% endblock %}
